@@ -1,0 +1,18 @@
+header 
+  h1 CAPSTONE - CHATROOM
+  nav
+    ul
+      li 
+        a(href="/") Home
+      if loggedIn 
+        li 
+          a(href=`/users/${loggedInUserNick}`) #{loggedInUserNick}
+        li 
+          a(href="/api/auth/logout") Logout
+        li 
+          a(href="/api/channels/") channel
+      else
+        li
+          a(href="/api/auth/register") Join
+        li 
+          a(href="/api/auth/login") Login

@@ -1,0 +1,16 @@
+extends base.pug
+include mixins/room
+
+block content 
+  if loggedIn
+    for room in rooms
+      +room(room)
+      <br/>
+    else
+      span No Chat Rooms...
+    h1 Create New Chat Rooms
+    if errorMessage 
+      span=errorMessage
+    form(method="POST")
+        input(placeholder="new chat room Name",name="roomName",type="text",required)
+        input(type="submit",value="Create")

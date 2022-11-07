@@ -1,31 +1,57 @@
+import "dotenv/config";
 import express from "express";
+import socket from "socket.io";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import "./db";
+import authRouter from "./routers/authRouter";
+import rootRouter from "./routers/rootRouter";
+import channelRouter from "./routers/channelRouter";
+import { Authenticator } from "./middleware";
 
-const socketio = require("socket.io");
-const fs = require("fs");
 const app = express();
-const http = require("http").Server(app);
-const io = require("socket.io")(http);
-const PORT = 4000;
+const PORT = 9876;
+const logger = morgan("dev");
+
+app.set("view engine", "pug");
+app.set("views", process.cwd() + "/src/views");
+
+app.use(logger);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+app.use(Authenticator);
+app.use("/", rootRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/channels", channelRouter);
 
 app.get("/", (req, res) => {
-  fs.readFile("./chat.html", (error, data) => {
-    if (error) {
-      console.log(error);
-      return res.sendStatus(500);
-    }
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(data);
-  });
+  return res.send("SERVER!!");
 });
 
-io.sockets.on("connection", (socket) => {
-  socket.on("message", (data) => {
-    io.sockets.emit("message", data);
-  });
+const handleListen = () => console.log(`🎸 Server listening on PORT ${PORT}`);
+
+const server = app.listen(PORT, handleListen);
+
+const io = socket(server, {
+  cors: {
+    origin: "*", // frontend url
+  },
 });
 
-const handleListen = () => {
-  console.log(`🎸 Server Listening on PORT ${PORT}`);
-};
+// const io = require("socket.io")(server, { cors: { origin: "*" } });
 
-http.listen(PORT, handleListen);
+io.on("connection", (socket) => {
+  socket.on("registerAll", (channels) => {
+    channels.forEach((channel) => {
+      socket.join(channel._id);
+    });
+  });
+  socket.on("register", (channel) => {
+    socket.join(channel._id);
+  });
+  socket.on("messageSent", (channel) => {
+    socket.to(channel._id).emit("meesageReceived", channel);
+  });
+});

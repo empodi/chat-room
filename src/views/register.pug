@@ -1,0 +1,12 @@
+extends base.pug
+
+block content
+  h1 Make Account
+  if errorMessage
+    span=errorMessage
+  form(method="POST")
+    input(name="userId", placeholder="ID/Email", type="email", required)
+    input(name="nickname", placeholder="nickname" type="text", required)
+    input(name="password", placeholder="PWD" type="password",required)
+    input(name="confirmPassword", placeholder="PWD confirm" type="password", required)
+    input(type="submit",value="Register")
